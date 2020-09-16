@@ -1,7 +1,7 @@
 ---
-title: "Lasso with cyclic coordinate descent"
+title: "PLS"
 author: "Jingyu Xu"
-date: "09/13/2020"
+date: "09/15/2020"
 output:
   html_document:
     code_folding: hide
