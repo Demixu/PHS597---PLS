@@ -443,18 +443,18 @@ summary {
 
 <p>##Simulate data</p>
 <pre class="r"><code>set.seed(111)
-Sigma &lt;- diag(c(8,2,6,4),4,4)
-Sigma[1,2]=1.5
-Sigma[2,1]=1.5#X1 and x2 are correlated 
-X =MASS::mvrnorm(n=100, c(2, 2,2,3), Sigma)%&gt;%as.data.frame()
+Sigma.matrix &lt;- diag(c(8,2,6,4),4,4)
+Sigma.matrix[1,2]=1.5
+Sigma.matrix[2,1]=1.5#X1 and x2 are correlated 
+X =MASS::mvrnorm(n=100, c(2, 2,2,3), Sigma.matrix)%&gt;%as.data.frame()
 colnames(X)=c(&quot;X1&quot;,&quot;X2&quot;,&quot;X3&quot;,&quot;X4&quot;)
 X1 =X[,1]
 X2 =X[,2]
 X3 =X[,3]
 X4= X[,4]
 #generate Y
-eps = rnorm(100,mean=0,sd=2)
-Y = 2+8*X1+0.75*X4+eps
+Y = rnorm(100,mean(X[,2]),2)
+X = scale(X)
 data=data.frame(X,Y)</code></pre>
 <p>##PLS by hand</p>
 <pre class="r"><code>##construct pls direction
@@ -483,6 +483,8 @@ pls_update_comp = function(X,Y,m){
 
 ##do regression
 pls_regression= function(X,Y,m){
+  X=as.matrix(X)
+  Y=as.matrix(Y)
   Z=pls_update_comp(X,Y,m)
   Y_predict= rep(0,nrow(Y))
   for (i in 1:m) {
@@ -492,9 +494,10 @@ pls_regression= function(X,Y,m){
   return(Y_predict)
 }</code></pre>
 <p>##compare with R package</p>
-<pre class="r"><code>X=as.matrix(X)
+<pre class="r"><code>set.seed(111)
+X=as.matrix(X)
 Y=as.matrix(Y)
-R_pls = plsr(Y~., data = data,scale=F)
+R_pls = plsr(Y~., data = data)#scale by default
 R_pls$ncomp # four components</code></pre>
 <pre><code>## [1] 4</code></pre>
 <pre class="r"><code>self_pls = pls_update_comp(X,Y,4)
@@ -505,11 +508,11 @@ self_fitted = pls_regression(X,Y,4)
 ##R 
 sqrt(crossprod(R_pls$fitted.values-as.numeric(Y))/100)</code></pre>
 <pre><code>##          [,1]
-## [1,] 5.186603</code></pre>
+## [1,] 4.068256</code></pre>
 <pre class="r"><code>##self
 sqrt(crossprod(self_fitted-as.numeric(Y))/100)</code></pre>
 <pre><code>##          [,1]
-## [1,] 2.150183</code></pre>
+## [1,] 2.607005</code></pre>
 <pre class="r"><code>##check the direction of compositions
 R_d = R_pls$scores
 self_d=self_pls
@@ -517,7 +520,11 @@ direction=rep(0,ncol(X))
 for (i in 1:4) {
   c = crossprod(R_d[,i],self_d[,i])/sqrt(crossprod(R_d[,i])*crossprod(self_d[,i]))
   direction[i]=c
-}</code></pre>
+}
+
+direction</code></pre>
+<pre><code>## [1] 1 1 1 1</code></pre>
+<p>We can see from the comparing that the component directions from R pls package and the pls function we write are the same. And the RMSE of the self-deveopled function is lower than the one implemented in pls package.</p>
 
 
 
